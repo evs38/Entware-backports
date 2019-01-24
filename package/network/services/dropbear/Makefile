@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dropbear
 PKG_VERSION:=2017.75
-PKG_RELEASE:=5
+PKG_RELEASE:=8
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:= \
@@ -57,7 +57,7 @@ endef
 
 define Package/dropbear/conffiles
 /opt/etc/dropbear/dropbear_rsa_host_key
-/opt/etc/config/dropbear 
+/opt/etc/config/dropbear.conf
 endef
 
 define Package/dropbearconvert
@@ -82,8 +82,8 @@ CONFIGURE_ARGS += \
 	$(if $(CONFIG_DROPBEAR_ZLIB),,--disable-zlib) \
 	--enable-bundled-libtom
 
-TARGET_CFLAGS += -DARGTYPE=3 -ffunction-sections -fdata-sections
-TARGET_LDFLAGS += -Wl,--gc-sections
+TARGET_CFLAGS += -DARGTYPE=3 -ffunction-sections -fdata-sections -flto
+TARGET_LDFLAGS += -Wl,--gc-sections -flto=jobserver
 
 define Build/Configure
 	$(Build/Configure/Default)
@@ -135,8 +135,10 @@ define Package/dropbear/install
 	$(LN) ../sbin/dropbear $(1)/opt/bin/ssh
 	$(LN) ../sbin/dropbear $(1)/opt/bin/dbclient
 	$(LN) ../sbin/dropbear $(1)/opt/bin/dropbearkey
-	$(INSTALL_DIR) $(1)/opt/etc/{dropbear,init.d}
+	$(INSTALL_DIR) $(1)/opt/etc/{config,dropbear,init.d}
 	$(INSTALL_BIN) ./files/S51dropbear $(1)/opt/etc/init.d
+	$(INSTALL_DIR) $(1)/opt/etc/config
+	$(INSTALL_CONF) ./files/dropbear.conf $(1)/opt/etc/config
 endef
 
 define Package/dropbearconvert/install

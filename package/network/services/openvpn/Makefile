@@ -9,14 +9,14 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openvpn
 
-PKG_VERSION:=2.4.4
+PKG_VERSION:=2.4.6
 PKG_RELEASE:=2
 
 PKG_SOURCE_URL:=\
 	https://build.openvpn.net/downloads/releases/ \
 	https://swupdate.openvpn.net/community/releases/
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_HASH:=96cd1b8fe1e8cb2920f07c3fd3985faea756e16fdeebd11d3e146d5bd2b04a80
+PKG_HASH:=4f6434fa541cc9e363434ea71a16a62cf2615fb2f16af5b38f43ab5939998c26
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
@@ -43,7 +43,6 @@ define Package/openvpn/Default
 #else
 #  PROVIDES:=openvpn openvpn-crypto
 #endif
-  MAINTAINER:=Mirko Vogt <mirko@openwrt.org>
 endef
 
 Package/openvpn-openssl=$(call Package/openvpn/Default,openssl,OpenSSL,+PACKAGE_openvpn-openssl:libopenssl)
@@ -87,17 +86,16 @@ define Build/Configure
 		--disable-pkcs11 \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_LZO),--enable,--disable)-lzo \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_LZ4),--enable,--disable)-lz4 \
-		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_X509_ALT_USERNAME),enable,disable-x509-alt-username)-ssl \
+		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_X509_ALT_USERNAME),--enable,--disable)-x509-alt-username \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_SERVER),--enable,--disable)-server \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_MANAGEMENT),--enable,--disable)-management \
-		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_SOCKS),--enable,--disable)-socks \
-		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_HTTP),--enable,--disable)-http-proxy \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_FRAGMENT),--enable,--disable)-fragment \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_MULTIHOME),--enable,--disable)-multihome \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_IPROUTE2),--enable,--disable)-iproute2 \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_DEF_AUTH),--enable,--disable)-def-auth \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_PF),--enable,--disable)-pf \
-		$(if $(CONFIG_OPENVPN_NOSSL),--disable-ssl --disable-crypto,--enable-ssl --enable-crypto) \
+		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_PORT_SHARE),--enable,--disable)-port-share \
+		$(if $(CONFIG_OPENVPN_NOSSL),--disable-crypto,--enable-crypto) \
 		$(if $(CONFIG_OPENVPN_OPENSSL),--with-crypto-library=openssl) \
 		$(if $(CONFIG_OPENVPN_MBEDTLS),--with-crypto-library=mbedtls) \
 	)
@@ -107,7 +105,8 @@ define Package/openvpn-$(BUILD_VARIANT)/install
 	$(INSTALL_DIR) \
 		$(1)/opt/sbin \
 		$(1)/opt/etc/init.d \
-		$(1)/opt/etc/openvpn
+		$(1)/opt/etc/openvpn \
+		$(1)/opt/lib/upgrade/keep.d
 
 	$(INSTALL_BIN) \
 		$(PKG_INSTALL_DIR)/opt/sbin/openvpn \
@@ -116,23 +115,10 @@ define Package/openvpn-$(BUILD_VARIANT)/install
 	$(INSTALL_BIN) \
 		files/S20openvpn \
 		$(1)/opt/etc/init.d
-endef
 
-define Package/openvpn-$(BUILD_VARIANT)/postinst
-#!/bin/sh
-
-PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-for bin_with_path in sbin/ifconfig sbin/route sbin/ip bin/netstat; do
-    [ -e "/opt/$$bin_with_path" ] && continue
-    bin=`echo $$bin_with_path | cut -d '/' -f 2`
-    found_bin=`which $$bin`
-    if [ -z "$$found_bin" ]; then
-	echo "Warning: $$bin program not found. Please, install it before using OpenVPN."
-	continue
-    fi
-    ln -s $$found_bin /opt/$$bin_with_path
-done
+	$(INSTALL_DATA) \
+		files/openvpn.upgrade \
+		$(1)/opt/lib/upgrade/keep.d/openvpn
 endef
 
 $(eval $(call BuildPackage,openvpn-openssl))

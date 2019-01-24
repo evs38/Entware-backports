@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=valgrind
-PKG_VERSION:=3.13.0
+PKG_VERSION:=3.14.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://sourceware.org/pub/valgrind/
-PKG_HASH:=d76680ef03f00cd5e970bbdcd4e57fb1f6df7d2e2c071635ef2be74790190c3b
+PKG_HASH:=037c11bfefd477cc6e9ebe8f193bb237fe397f7ce791b4a4ce3fa1c6a520baa5
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_LICENSE:=GPL-2.0+
@@ -85,7 +85,7 @@ CPU := $(patsubst x86_64,amd64,$(patsubst x86,i386,$(patsubst um,$(ARCH),$(LINUX
 CONFIGURE_VARS += \
 	UNAME_R=$(LINUX_VERSION)
 
-ifeq ($(ARCH),x86_64)
+ifeq ($(CONFIG_ARCH_64BIT),y)
 	CONFIGURE_ARGS += \
 		--enable-only64bit
 	BITS := 64bit
@@ -104,7 +104,12 @@ CONFIGURE_ARGS += \
 	--disable-tui \
 	--disable-valgrindtk \
 	--without-included-gettext \
-	--with-pagesize=4 \
+	--with-pagesize=4
+
+ifeq (,$(filter mips mipsel,$(ARCH)))
+CONFIGURE_ARGS += \
+	--enable-lto
+endif
 
 define Package/valgrind/install	
 	$(INSTALL_DIR) $(1)/opt/bin
@@ -114,12 +119,17 @@ define Package/valgrind/install
 		./files/default.supp \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/none-* \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/vgpreload_core*.so \
-		$(PKG_INSTALL_DIR)/opt/lib/valgrind/$(CPU)-*.xml \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/$(BITS)-core*.xml \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/$(BITS)-linux*.xml \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/memcheck-* \
 		$(PKG_INSTALL_DIR)/opt/lib/valgrind/vgpreload_memcheck*.so \
 		$(1)/opt/lib/valgrind/
+
+ifneq ($(ARCH),aarch64)
+	$(CP) \
+		$(PKG_INSTALL_DIR)/opt/lib/valgrind/$(CPU)-*.xml \
+		$(1)/opt/lib/valgrind/
+endif
 endef
 
 define Package/valgrind-cachegrind/install

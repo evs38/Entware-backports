@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=6in4
-PKG_VERSION:=24
+PKG_VERSION:=25
 PKG_RELEASE:=1
 PKG_LICENSE:=GPL-2.0
 
@@ -40,4 +40,4 @@ define Package/6in4/install
 	$(INSTALL_BIN) ./files/6in4.sh $(1)/lib/netifd/proto/6in4.sh
 endef
 
-$(eval $(call BuildPackage,6in4))
+#$(eval $(call BuildPackage,6in4))

@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=ppp
 PKG_VERSION:=2.4.7
-PKG_RELEASE:=12
+PKG_RELEASE:=14
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://download.samba.org/pub/ppp/
@@ -108,7 +108,7 @@ endef
 
 define Package/ppp-mod-pptp
 $(call Package/ppp/Default)
-  DEPENDS:=@(PACKAGE_ppp||PACKAGE_ppp-multilink)
+  DEPENDS:=@(PACKAGE_ppp||PACKAGE_ppp-multilink) +resolveip
   TITLE:=PPtP plugin
 endef
 
@@ -181,9 +181,14 @@ $(call Build/Configure/Default,, \
 	UNAME_M="$(ARCH)" \
 )
 	mkdir -p $(PKG_BUILD_DIR)/pppd/plugins/pppoatm/linux
-	cp \
+	$(CP) \
 		$(LINUX_DIR)/include/linux/compiler.h \
 		$(LINUX_DIR)/include/$(LINUX_UAPI_DIR)linux/atm*.h \
+		$(PKG_BUILD_DIR)/pppd/plugins/pppoatm/linux/
+
+	# Kernel 4.14.9+ only, ignore the exit status of cp in case the file
+	# doesn't exits
+	-$(CP) $(LINUX_DIR)/include/linux/compiler_types.h \
 		$(PKG_BUILD_DIR)/pppd/plugins/pppoatm/linux/
 endef
 
@@ -229,7 +234,6 @@ define Package/ppp-mod-pppoe/install
 	$(INSTALL_DIR) $(1)/opt/lib/pppd/$(PKG_VERSION)
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/lib/pppd/$(PKG_VERSION)/rp-pppoe.so \
 		$(1)/opt/lib/pppd/$(PKG_VERSION)/
-
 endef
 
 define Package/ppp-mod-radius/install

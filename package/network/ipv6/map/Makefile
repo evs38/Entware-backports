@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=map
 PKG_VERSION:=4
-PKG_RELEASE:=9
+PKG_RELEASE:=12
 PKG_LICENSE:=GPL-2.0
 
 include $(INCLUDE_DIR)/package.mk
@@ -37,4 +37,4 @@ define Package/map/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mapcalc $(1)/usr/sbin/
 endef
 
-$(eval $(call BuildPackage,map))
+#$(eval $(call BuildPackage,map))

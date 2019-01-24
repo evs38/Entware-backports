@@ -8,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gdb
-PKG_VERSION:=8.0.1
+PKG_VERSION:=8.2
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=@GNU/gdb
-PKG_HASH:=3dbd5f93e36ba2815ad0efab030dcd0c7b211d7b353a40a53f4c02d7d56295e3
+PKG_HASH:=c3a441a29c7c89720b734e5a9c6289c0a06be7e0c76ef538f7bbcef389347c39
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
@@ -25,7 +25,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/gdb/Default
   SECTION:=devel
   CATEGORY:=Development
-  DEPENDS:=+!USE_MUSL:libthread-db +PACKAGE_zlib:zlib @!LINUX_2_6_22
+  DEPENDS:=+!USE_MUSL:libthread-db +PACKAGE_zlib:zlib @!arc
   URL:=http://www.gnu.org/software/gdb/
 endef
 
@@ -44,7 +44,6 @@ endef
 define Package/gdbserver
 $(call Package/gdb/Default)
   TITLE:=Remote server for GNU Debugger
-  DEPENDS+=+libstdcpp
 endef
 
 define Package/gdbserver/description
@@ -62,6 +61,10 @@ CONFIGURE_ARGS+= \
 
 CONFIGURE_VARS+= \
 	ac_cv_search_tgetent="$(TARGET_LDFLAGS) -lncurses -lreadline"
+
+TARGET_LDFLAGS+= \
+	-static-libstdc++ \
+	-Wl,--gc-sections
 
 define Build/Compile
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \

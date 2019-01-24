@@ -4,15 +4,14 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-# locales package added.
+# locales package moved to rtndev
 
 include $(TOPDIR)/rules.mk
 PKG_NAME:=toolchain
+PKG_RELEASE:=3
 
-ifeq ($(CONFIG_USE_UCLIBC),y)
-  PKG_RELEASE:=1
-else
-  PKG_RELEASE:=6
+ifeq ($(CONFIG_USE_GLIBC),y)
+        PKG_RELEASE=8
 endif
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
@@ -34,85 +33,12 @@ define Package/gcc/Default
   VERSION:=$(LIBGCC_VERSION)-$(PKG_RELEASE)
 endef
 
-define Package/locales
-$(call Package/gcc/Default)
-  TITLE:=Locales support (independent of system lib)
-  VERSION:=$(LIBC_VERSION)-$(PKG_RELEASE)
-  DEPENDS:=@USE_GLIBC
-endef
-
 define Package/gconv-modules
 $(call Package/gcc/Default)
   TITLE:=Glibc gconv modules
   VERSION:=$(LIBC_VERSION)-$(PKG_RELEASE)
   DEPENDS:=@USE_GLIBC
 endef
-
-define Package/locales/config
-	menu "Configuration"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
-
-	config TOOLCHAIN_USR_DIR
-		string
-		prompt "External toolchain usr directory"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
-
-	config LOCALE_PROGS_SPEC
-		string
-		prompt "programs to work with locales"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
-		default "./bin/locale ./bin/localedef"
-
-	config i18N_LOCALES
-		string
-		prompt "locale sources to install"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
-
-	config i18N_CHARMAPS
-		string
-		prompt "charmaps to install"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_locales
-
-	endmenu
-endef
-
-define Package/locales/postinst
-#!/bin/sh
-
-echo "Entware uses separate locale-archive file independent from main system"
-if [ -f '/opt/usr/lib/locale/locale-archive' ]
-then
-	echo "locale-archive file found, checking format"
-	/opt/bin/locale.new -a 2>&1 >/dev/null | grep 'LC_COLLATE' > /dev/null
-	if [ $$? -eq 0 ] ; then
-		echo "Old format locale archive found. Deleting!"
-		rm -f /opt/usr/lib/locale/locale-archive
-	fi
-fi
-if ! [ -f '/opt/usr/lib/locale/locale-archive' ]
-then
-	mkdir -p /opt/usr/lib/locale
-	echo "Creating locale archive - /opt/usr/lib/locale/locale-archive"
-	echo "Adding en_EN.UTF-8"
-	/opt/bin/localedef.new -c -f UTF-8 -i en_US en_US.UTF-8
-	echo "Adding ru_RU.UTF-8"
-	/opt/bin/localedef.new -c -f UTF-8 -i ru_RU ru_RU.UTF-8
-fi
-if [ -f '/opt/usr/lib/locale/locale-archive' ]
-then
-	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib223.tar.gz"
-	echo "You can add new locales to Entware using /opt/bin/localedef.new"
-fi
-if ! [ -f '/opt/usr/lib/locale/locale-archive' ]
-then
-	echo "locale-archive file was not created, not enough memory? Downloading..."
-	wget http://pkg.entware.net/binaries/other/locale-archive.2.23 -O /opt/usr/lib/locale/locale-archive
-	echo "You can download locale sources from http://pkg.entware.net/sources/i18n_glib223.tar.gz"
-	echo "You can add new locales to Entware using /opt/bin/localedef.new"
-fi
-
-endef
-
 
 define Package/libgcc
 $(call Package/gcc/Default)
@@ -167,7 +93,7 @@ endef
 
 define Package/libssp
 $(call Package/gcc/Default)
-  DEPENDS+=@SSP_SUPPORT
+  DEPENDS+=@GCC_LIBSSP
   TITLE:=GCC support library
 endef
 
@@ -431,25 +357,80 @@ endef
 LIBGCC_A=$(lastword $(wildcard $(TOOLCHAIN_DIR)/lib/gcc/*/*/libgcc_pic.a))
 LIBGCC_MAP=$(lastword $(wildcard $(TOOLCHAIN_DIR)/lib/gcc/*/*/libgcc.map))
 LIBGCC_SO=$(lastword $(wildcard $(TOOLCHAIN_DIR)/lib/libgcc_s.so.*))
+ifeq ($(CONFIG_EXTERNAL_TOOLCHAIN),)
+  ifneq ($(if $(CONFIG_USE_UCLIBC),$(CONFIG_GCC_VERSION_LINARO)),)
+    BUILD_LIBGCC:=$(if $(CONFIG_m68k)$(CONFIG_powerpc),,$(PKG_BUILD_DIR)/libgcc_s.so.*)
+  endif
+endif
 
-define Build/Compile/uClibc
+ifneq ($(BUILD_LIBGCC),)
+  define Build/Compile/uClibc
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libc_so.a)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libc_so.a)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(wildcard $(TOOLCHAIN_DIR)/lib/libuClibc-*.so))" \
+		-Wl,-init,__uClibc_init -Wl,-soname=libc.so.0 \
+		$(BUILD_LIBGCC)
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libcrypt-*.so)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libcrypt_pic.a)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(wildcard $(TOOLCHAIN_DIR)/lib/libcrypt-*.so))" \
+		$(BUILD_LIBGCC) \
+		-Wl,-soname=libcrypt.so.0
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libatomic.so)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libatomic.a)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(wildcard $(TOOLCHAIN_DIR)/lib/libatomic*.so))" \
+		$(BUILD_LIBGCC) \
+		-Wl,-soname=libatomic.so.0
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libm-*.so)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libm_pic.a)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(wildcard $(TOOLCHAIN_DIR)/lib/libm-*.so))" \
+		$(BUILD_LIBGCC) \
+		-Wl,-soname=libm.so.0
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libpthread-*.so)" \
+		"$(wildcard $(TOOLCHAIN_DIR)/lib/libpthread_so.a)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(wildcard $(TOOLCHAIN_DIR)/lib/libpthread-*.so))" \
+		-Wl,-z,nodelete,-z,initfirst,-init=__pthread_initialize_minimal_internal \
+		-ldl -lc $(BUILD_LIBGCC) \
+		-Wl,-soname=libpthread.so.0
+  endef
+  define Build/Compile/libgcc
+	$(SCRIPT_DIR)/relink-lib.sh \
+		"$(TARGET_CROSS)" \
+		"$(LIBGCC_SO)" \
+		"$(LIBGCC_A)" \
+		"$(patsubst $(TOOLCHAIN_DIR)/lib/%,$(PKG_BUILD_DIR)/%,$(LIBGCC_SO))" \
+		-Wl,--version-script=$(LIBGCC_MAP) -Wl,-soname=libgcc_s.so.1
+  endef
+else
+  define Build/Compile/uClibc
 	$(CP) \
 		$(TOOLCHAIN_DIR)/lib/libuClibc-*.so \
 		$(TOOLCHAIN_DIR)/lib/libcrypt-*.so \
 		$(TOOLCHAIN_DIR)/lib/libm-*.so \
 		$(TOOLCHAIN_DIR)/lib/libpthread-*.so \
 		$(PKG_BUILD_DIR)/
-endef
-ifneq ($(LIBGCC_SO),)
+  endef
+  ifneq ($(LIBGCC_SO),)
     define Build/Compile/libgcc
 	$(CP) $(LIBGCC_SO) $(PKG_BUILD_DIR)/
     endef
+  endif
 endif
 
 define Build/Compile/Default
 	$(call Build/Compile/libgcc)
 	$(call Build/Compile/$(LIBC))
 endef
+
 Build/Compile = $(Build/Compile/Default)
 
 ifeq ($(CONFIG_EXTERNAL_TOOLCHAIN),)
@@ -562,7 +543,10 @@ endif
   ifneq ($(CONFIG_USE_MUSL),y)
 	$(CP) \
 		$(TOOLCHAIN_DIR)/lib/libpthread.so.* \
-		$(TOOLCHAIN_DIR)/lib/libpthread-$(LIBC_SO_VERSION).so \
+		$(if $(BUILD_LIBGCC),\
+			$(PKG_BUILD_DIR)/libpthread-$(LIBC_SO_VERSION).so, \
+			$(TOOLCHAIN_DIR)/lib/libpthread-$(LIBC_SO_VERSION).so \
+		) \
 		$(1)/opt/lib/
   endif
   endef
@@ -594,8 +578,10 @@ endif
 	$(CP) $(TOOLCHAIN_DIR)/bin/ldd $(1)/opt/bin/
   ifeq ($(CONFIG_USE_GLIBC),y)
 	$(SED) 's|^\#!.*bash|\#!/opt/bin/sh|g; \
+	s|/lib/ld.so.1|/opt/lib/ld.so.1|g; \
 	s|/lib/ld-linux.so.3|/opt/lib/ld-linux.so.3|g; \
 	s|/lib/ld-linux.so.2|/opt/lib/ld-linux.so.2|g; \
+	s|/lib/ld-linux-aarch64.so.1|/opt/lib/ld-linux-aarch64.so.1|g; \
 	s|/lib64/ld-linux-x86-64.so.2|/opt/lib/ld-linux-x86-64.so.2|g' $(1)/opt/bin/ldd
   endif
   endef
@@ -603,27 +589,6 @@ endif
   define Package/ldconfig/install
 	$(INSTALL_DIR) $(1)/opt/sbin/
 	$(CP) $(TOOLCHAIN_DIR)/sbin/ldconfig $(1)/opt/sbin/
-  endef
-
-ilocales=de_DE en_US en_GB fr_FR it_IT ru_RU i18n iso14651_t1 iso14651_t1_common translit_circle translit_combining translit_font translit_narrow translit_small translit_cjk_compat translit_compat translit_fraction translit_neutral translit_wide
-icharmaps=ANSI_X3.4-1968.gz UTF-8.gz
-
-
-
-  define Package/locales/install
-	$(INSTALL_DIR) $(1)/opt/usr/lib/locale
-	$(INSTALL_DIR) $(1)/opt/usr/share/i18n/locales
-	$(INSTALL_DIR) $(1)/opt/usr/share/i18n/charmaps
-	$(INSTALL_DIR) $(1)/opt/bin
-	$(CP) $(TOOLCHAIN_DIR)/bin/locale $(1)/opt/bin/locale.new
-	$(CP) $(TOOLCHAIN_DIR)/bin/localedef $(1)/opt/bin/localedef.new
-	for file in $(ilocales); do \
-		$(CP) $(TOOLCHAIN_DIR)/share/i18n/locales/$$$$file $(1)/opt/usr/share/i18n/locales ; \
-	done ; \
-	for file in $(icharmaps); do \
-		$(CP) $(TOOLCHAIN_DIR)/share/i18n/charmaps/$$$$file $(1)/opt/usr/share/i18n/charmaps ; \
-	done ; \
-	exit 0
   endef
 
   define Package/gconv-modules/install
@@ -741,28 +706,6 @@ else
 	exit 0
   endef
 
-  define Package/locales/install
-	$(INSTALL_DIR) $(1)/opt/usr/lib/locale; \
-	for file in $(call qstrip,$(CONFIG_LOCALE_PROGS_SPEC)); do \
-		dir=`dirname $$$$file` ; \
-		$(INSTALL_DIR) $(1)/opt/bin ; \
-		$(CP) $(call qstrip,$(CONFIG_TOOLCHAIN_USR_DIR))/$$$$file $(1)/opt/bin/ ; \
-	done ; \
-	mv $(1)/opt/bin/locale $(1)/opt/bin/locale.new; \
-	mv $(1)/opt/bin/localedef $(1)/opt/bin/localedef.new; \
-	for file in $(call qstrip,$(CONFIG_i18N_LOCALES)); do \
-		dir=`dirname $$$$file` ; \
-		$(INSTALL_DIR) $(1)/opt/usr/share/i18n/locales; \
-		$(CP) $(call qstrip,$(CONFIG_TOOLCHAIN_USR_DIR))/$$$$file $(1)/opt/usr/share/i18n/locales ; \
-	done ; \
-	for file in $(call qstrip,$(CONFIG_i18N_CHARMAPS)); do \
-		dir=`dirname $$$$file` ; \
-		$(INSTALL_DIR) $(1)/opt/usr/share/i18n/charmaps; \
-		$(CP) $(call qstrip,$(CONFIG_TOOLCHAIN_USR_DIR))/$$$$file $(1)/opt/usr/share/i18n/charmaps ; \
-	done ; \
-	exit 0
-  endef
-
 endif
 
 $(eval $(call BuildPackage,libc))
@@ -777,5 +720,4 @@ $(eval $(call BuildPackage,libgfortran))
 $(eval $(call BuildPackage,libgo))
 $(eval $(call BuildPackage,ldd))
 $(eval $(call BuildPackage,ldconfig))
-$(eval $(call BuildPackage,locales))
 $(eval $(call BuildPackage,gconv-modules))

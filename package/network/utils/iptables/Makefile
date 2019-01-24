@@ -22,9 +22,11 @@ PKG_SOURCE_URL:=http://www.netfilter.org/projects/iptables/files \
 PKG_HASH:=52004c68021da9a599feed27f65defcfb22128f7da2c0531c0f75de0f479d3e0
 
 PKG_FIXUP:=autoreconf
+
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=1
 PKG_LICENSE:=GPL-2.0
+PKG_CPE_ID:=cpe:/a:netfilter_core_team:iptables
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -77,12 +79,12 @@ endef
 
 TARGET_CPPFLAGS := \
 	-I$(PKG_BUILD_DIR)/include \
-	-I$(LINUX_DIR)/include \
+	-I$(LINUX_DIR)/user_headers/include \
 	$(TARGET_CPPFLAGS)
 
 TARGET_CFLAGS += \
 	-I$(PKG_BUILD_DIR)/include \
-	-I$(LINUX_DIR)/include \
+	-I$(LINUX_DIR)/user_headers/include \
 	-ffunction-sections -fdata-sections \
 	-DNO_LEGACY
 
@@ -92,7 +94,7 @@ TARGET_LDFLAGS += \
 CONFIGURE_ARGS += \
 	--enable-shared \
 	--enable-devel \
-	--with-kernel="$(LINUX_DIR)" \
+	--with-kernel="$(LINUX_DIR)/user_headers" \
 	--with-xtlibdir=/opt/lib/iptables \
 	--enable-static \
 	$(if $(CONFIG_IPV6),,--disable-ipv6)
@@ -100,7 +102,7 @@ CONFIGURE_ARGS += \
 MAKE_FLAGS := \
 	$(TARGET_CONFIGURE_OPTS) \
 	COPT_FLAGS="$(TARGET_CFLAGS)" \
-	KERNEL_DIR="$(LINUX_DIR)/user_headers/" PREFIX=/usr \
+	KERNEL_DIR="$(LINUX_DIR)/user_headers/" PREFIX=/opt \
 	KBUILD_OUTPUT="$(LINUX_DIR)"
 
 define Build/InstallDev
