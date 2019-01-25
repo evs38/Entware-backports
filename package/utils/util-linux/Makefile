@@ -187,7 +187,7 @@ endef
 define Package/dmesg
 $(call Package/util-linux/Default)
   TITLE:=print or control the kernel ring buffer
-  DEPENDS:= +libncursesw
+  DEPENDS:= +libncursesw +librt
 endef
 
 define Package/dmesg/description
@@ -524,6 +524,7 @@ CONFIGURE_ARGS += \
 	--without-udev			\
 	--without-readline		\
 	--disable-more			\
+	--disable-rfkill                \
 	--with-ncursesw
 
 TARGET_CFLAGS += $(FPIC) -std=gnu99
