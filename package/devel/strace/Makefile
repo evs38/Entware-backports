@@ -4,21 +4,23 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
+#
+# 4.15 and newer requres DM_* includes, which is absent in 2.6.22
 
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=strace
-PKG_VERSION:=4.25
+
+PKG_VERSION:=4.14
 PKG_RELEASE:=1
+PKG_MD5SUM:=1e39b5f7583256d7dc21170b9da529ae
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=https://strace.io/files/$(PKG_VERSION)
-PKG_HASH:=d685f8e65470b7832c3aff60c57ab4459f26ff89f07c10f92bd70ee89efac701
+PKG_SOURCE_URL:=@SF/$(PKG_NAME)
 
 PKG_LICENSE:=BSD-3c
 PKG_LICENSE_FILES:=COPYRIGHT
-PKG_CPE_ID:=cpe:/a:paul_kranenburg:strace
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
@@ -28,11 +30,7 @@ PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-HOST_CFLAGS += -I$(LINUX_DIR)/user_headers/include
-
-ifeq ($(ARCH),aarch64)
-  CONFIGURE_ARGS += --enable-mpers=check
-endif
+HOST_CFLAGS += -I$(LINUX_DIR)/include
 
 CONFIGURE_VARS+= \
 	LDFLAGS_FOR_BUILD="$(HOST_LDFLAGS)" \
@@ -54,17 +52,15 @@ system calls a program makes while it is running.
 endef
 
 define Package/strace/config
-config PACKAGE_strace_libdw
-	bool "Enable stack tracing support using libdw"
-	default n
 config PACKAGE_strace_libunwind
 	bool "Enable stack tracing support using libunwind (experimental)"
 	default n
 endef
 
-CONFIGURE_ARGS += \
-	--with-libdw=$(if $(CONFIG_PACKAGE_strace_libdw),yes,no) \
-	--with-libunwind=$(if $(CONFIG_PACKAGE_strace_libunwind),yes,no)
+CONFIGURE_ARGS += --with-libunwind=$(if $(CONFIG_PACKAGE_strace_libunwind),yes,no)
+
+TARGET_CFLAGS += \
+	-I$(LINUX_DIR)/include
 
 MAKE_FLAGS := \
 	CCOPT="$(TARGET_CFLAGS)"

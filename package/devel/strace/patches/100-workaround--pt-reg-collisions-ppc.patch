@@ -1,6 +1,8 @@
+diff --git a/ptrace.h b/ptrace.h
+index ddb46cb..48a54b8 100644
 --- a/ptrace.h
 +++ b/ptrace.h
-@@ -49,7 +49,14 @@
+@@ -55,7 +55,14 @@ extern long ptrace(int, int, char *, long);
  # define ptrace_peeksiginfo_args XXX_ptrace_peeksiginfo_args
  #endif
  
