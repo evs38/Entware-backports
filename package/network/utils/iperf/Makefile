@@ -26,7 +26,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/iperf
   SECTION:=net
   CATEGORY:=Network
-  DEPENDS:= +libstdcpp +libpthread
+  DEPENDS:= +libstdcpp +libpthread +PACKAGE_librt:librt
   TITLE:=Internet Protocol bandwidth measuring tool
   URL:=http://sourceforge.net/projects/iperf2/
 endef
