@@ -240,12 +240,16 @@ endef
 
 define Package/libext2fs/install
 	$(INSTALL_DIR) $(1)/opt/lib
-	$(CP) $(PKG_INSTALL_DIR)/opt/lib/libext2fs.so.* $(1)/opt/lib/
+		$(CP) \
+		     $(PKG_INSTALL_DIR)/opt/lib/libext2fs.so.* \
+ 	 	     $(PKG_INSTALL_DIR)/opt/lib/libcom_err.so.* \
+ 		     $(1)/opt/lib/
 endef
 
 define Package/libext2fs/install_lib
 	$(INSTALL_DIR) $(1)/opt/lib
 	$(CP) $(PKG_BUILD_DIR)/lib/ext2fs/libext2fs.a $(1)/opt/lib/libext2fs_pic.a
+	$(CP) $(PKG_INSTALL_DIR)/opt/lib/libss.so.* $(1)/opt/lib/
 endef
 
 define Package/tune2fs/install
@@ -283,6 +287,7 @@ define Package/debugfs/install
 	$(INSTALL_DIR) $(1)/opt/sbin
 	$(INSTALL_DIR) $(1)/opt/lib
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/opt/sbin/debugfs $(1)/opt/sbin/
+	$(CP) $(PKG_INSTALL_DIR)/opt/lib/libss.so.* $(1)/opt/lib/
 endef
 
 define Package/chattr/install
