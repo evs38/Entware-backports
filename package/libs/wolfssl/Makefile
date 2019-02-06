@@ -42,6 +42,7 @@ define Package/libwolfssl
   URL:=http://www.wolfssl.com/
   MENU:=1
   PROVIDES:=libcyassl
+  DEPENDS:=+libpthread
 endef
 
 define Package/libwolfssl/description
