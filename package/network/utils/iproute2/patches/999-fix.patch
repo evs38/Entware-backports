@@ -9,3 +9,32 @@
  			s->size_log++;
  			goto again;
  		}
+From e15678321a49dd203232240a6e121f4791be58f7 Mon Sep 17 00:00:00 2001
+From: maurerr <mariusd84@gmail.com>
+Date: Fri, 8 Feb 2019 16:13:40 +0100
+Subject: [PATCH] fix namespace.c setns
+
+---
+ lib/namespace.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/lib/namespace.c b/lib/namespace.c
+index 2c83031..6710654 100644
+--- a/lib/namespace.c
++++ b/lib/namespace.c
+@@ -14,6 +14,12 @@
+ 
+ #include "utils.h"
+ #include "namespace.h"
++#define __NR_setns 268
++
++int setns(int fd, int nstype)
++{
++		return syscall(__NR_setns, fd, nstype);
++}
+ 
+ static void bind_etc(const char *name)
+ {
+-- 
+2.11.0
+
