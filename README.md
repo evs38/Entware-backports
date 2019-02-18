@@ -1,17 +1,13 @@
-## Entware-ng
+## Entware-backports
 
-This is a software repository for network attached storages, routers and other embedded devices.
+This is a software repository for MIPSel routers.
 
-Browse through ~2000 packages for different platforms:
+Browse through >2200 packages for mipsel platforms:
 
-* armv5 - http://pkg.entware.net/binaries/armv5/Packages.html
-* armv7 - http://pkg.entware.net/binaries/armv7/Packages.html
-* mipsel - http://pkg.entware.net/binaries/mipsel/Packages.html
-* x86-32 - http://pkg.entware.net/binaries/x86-32/Packages.html
-* x86-64 - http://pkg.entware.net/binaries/x86-64/Packages.html
+* http://pkg.entware-backports.tk/packages/Packages.html
 
 ---
 
 [See how](https://github.com/Entware-ng/Entware-ng/wiki) to use it.
 
-Feel free to [ask for new packages](https://github.com/Entware-ng/Entware-ng/issues) or report any bugs you've found.
+Feel free to [ask for new packages](https://github.com/maurerr/entware-backports/issues) or report any bugs you've found.
