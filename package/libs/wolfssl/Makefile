@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wolfssl
 PKG_VERSION:=3.15.3-stable
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).zip
 # PKG_SOURCE_URL:=https://www.wolfssl.com/
@@ -22,6 +22,7 @@ PKG_USE_MIPS16:=0
 PKG_BUILD_PARALLEL:=1
 PKG_LICENSE:=GPL-2.0+
 PKG_CPE_ID:=cpe:/a:yassl:cyassl
+
 
 PKG_CONFIG_DEPENDS:=\
 	CONFIG_WOLFSSL_HAS_AES_CCM CONFIG_WOLFSSL_HAS_AES_GCM \
@@ -42,6 +43,7 @@ define Package/libwolfssl
   URL:=http://www.wolfssl.com/
   MENU:=1
   PROVIDES:=libcyassl
+  ABI_VERSION:=18
   DEPENDS:=+libpthread
 endef
 
@@ -169,7 +171,6 @@ endef
 define Package/libwolfssl/install
 	$(INSTALL_DIR) $(1)/opt/lib
 	$(CP) $(PKG_INSTALL_DIR)/opt/lib/libwolfssl.so* $(1)/opt/lib/
-	ln -s libwolfssl.so $(1)/opt/lib/libcyassl.so
 endef
 
 $(eval $(call BuildPackage,libwolfssl))
