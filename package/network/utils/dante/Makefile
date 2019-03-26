@@ -83,6 +83,7 @@ define Package/sockd
   SECTION:=net
   CATEGORY:=Network
   TITLE+= Daemon
+  DEPENDS:= +libubacktrace
 endef
 
 define Package/sockd/description
@@ -102,6 +103,7 @@ define Package/socksify
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE+= Client
+  DEPENDS:= +libubacktrace
 endef
 
 define Package/socksify/description
