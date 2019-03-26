@@ -89,7 +89,7 @@ endef
 define Package/libopenssl
 $(call Package/openssl/Default)
   SUBMENU:=SSL
-  DEPENDS:=+OPENSSL_WITH_COMPRESSION:zlib
+  DEPENDS:=+OPENSSL_WITH_COMPRESSION:zlib +libpthread
   TITLE+= (libraries)
   ABI_VERSION:=1.1
   MENU:=1
