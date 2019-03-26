@@ -42,7 +42,7 @@ endef
 define Package/samba36-server
   $(call Package/samba/Default)
   TITLE+= server
-  DEPENDS:=+USE_GLIBC:librt +libiconv-full
+  DEPENDS:=+USE_GLIBC:librt +libiconv-full +libubacktrace
 endef
 
 #define Package/samba36-hotplug
@@ -54,13 +54,13 @@ endef
 define Package/samba36-client
   $(call Package/samba/Default)
   TITLE+= client
-  DEPENDS:=+libreadline +libncurses +libiconv-full
+  DEPENDS:=+libreadline +libncurses +libiconv-full +libubacktrace
 endef
 
 define Package/samba36-net
   $(call Package/samba/Default)
   TITLE+= net commands
-  DEPENDS:=+libreadline +libncurses +libiconv-full
+  DEPENDS:=+libreadline +libncurses +libiconv-full +libubacktrace
 endef
 
 define Package/samba36-server/config
