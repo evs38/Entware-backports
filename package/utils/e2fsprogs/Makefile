@@ -144,8 +144,9 @@ endef
 
 TARGET_CFLAGS += $(FPIC) -ffunction-sections -fdata-sections -flto
 
-TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
-TARGET_LDFLAGS += -flto
+#TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
+#TARGET_LDFLAGS += -flto
+TARGET_LDFLAGS += -flto -lpthread -lrt
 
 CONFIGURE_ARGS += \
 	--disable-testio-debug \
@@ -157,6 +158,7 @@ CONFIGURE_ARGS += \
 	--disable-nls		\
 	--disable-rpath		\
 	--disable-threads	\
+	--disable-backtrace     \
 	--disable-fuse2fs
 
 define Build/Prepare
