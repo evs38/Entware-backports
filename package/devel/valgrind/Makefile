@@ -95,20 +95,21 @@ else
 	BITS := 32bit
 endif
 
-ifeq ($(CONFIG_mips)$(CONFIG_mipsel),y)
-TARGET_CFLAGS:=$(filter-out -mips32r2 ,$(TARGET_CFLAGS))
-TARGET_CFLAGS += -march=mips32r2
-
-CONFIGURE_VARS += \
-	LTO_AR=$(TOOLCHAIN_DIR)/bin/$(TARGET_CROSS)ar \
-	LTO_RANLIB=$(TOOLCHAIN_DIR)/bin/$(TARGET_CROSS)ranlib
-endif
-
 CONFIGURE_ARGS += \
-	--enable-tls \
-	--enable-lto \
-	--with-tmpdir=/opt/tmp \
-	--without-mpicc
+	  	--enable-tls \
+		--without-x \
+		--without-mpicc \
+		--without-uiout \
+		--disable-valgrindmi \
+		--disable-tui \
+		--disable-valgrindtk \
+		--without-included-gettext \
+		--with-pagesize=4
+
+ifeq (,$(filter mips mipsel,$(ARCH)))
+	CONFIGURE_ARGS += \
+			  	--enable-lto
+	endif
 
 define Package/valgrind/install	
 	$(INSTALL_DIR) $(1)/opt/bin
