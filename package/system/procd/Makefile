@@ -37,15 +37,15 @@ endif
 CMAKE_OPTIONS += -DEARLY_PATH="$(TARGET_INIT_PATH)"
 TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lrt)
 
-TARGET_CFLAGS += -flto
-TARGET_LDFLAGS += -flto
+#TARGET_CFLAGS += -flto
+#TARGET_LDFLAGS += -flto
 
 define Package/procd
   SECTION:=base
   CATEGORY:=Base system
   DEPENDS:=+ubusd +ubus +libjson-script +ubox +USE_GLIBC:librt +libubox +libubus
   TITLE:=OpenWrt system process manager
-  USERID:=:dialout=20 :audio=29
+#  USERID:=:dialout=20 :audio=29
 endef
 
 define Package/procd-ujail
