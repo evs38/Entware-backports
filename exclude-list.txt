@@ -1,0 +1,16 @@
+# to be used with " rsync -avz --exclude-from 'exclude-list.txt' ../Entware/package/ package "
+devel/strace
+utils/util-linux/Makefile
+utils/f2fs-tools/Makefile
+utils/e2fsprogs/Makefile
+libs/elfutils/
+network/utils/iperf/Makefile
+system/opkg
+network/services/dropbear/Makefile
+network/services/samba36/Makefile
+network/utils/dante/Makefile
+network/services/ppp/Makefile
+libs/wolfssl/Makefile
+libs/openssl/Makefile
+network/services/dnsmasq/Makefile
+
