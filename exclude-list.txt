@@ -3,7 +3,8 @@ devel/strace
 utils/util-linux/Makefile
 utils/f2fs-tools/Makefile
 utils/e2fsprogs/Makefile
-libs/elfutils/
+libs/elfutils
+libs/toolchain
 network/utils/iperf/Makefile
 system/opkg
 network/services/dropbear/Makefile
