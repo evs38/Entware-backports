@@ -9,4 +9,3 @@
  			s->size_log++;
  			goto again;
  		}
-

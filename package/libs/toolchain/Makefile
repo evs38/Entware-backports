@@ -235,32 +235,6 @@ define Package/libthread-db/config
 	endmenu
 endef
 
-define Package/libubacktrace
-$(call Package/libc/Default)
-  DEPENDS:=@!USE_MUSL
-  TITLE:=uClibc backtrace library
-endef
-
-define Package/libubacktrace/config
-	menu "Configuration"
-	depends on EXTERNAL_TOOLCHAIN && PACKAGE_libubacktrace
-
-	config LIBUBACKTRACE_ROOT_DIR
-		string
-		prompt "uClibc backtrace library"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_libubacktrace
-		default TOOLCHAIN_ROOT  if !NATIVE_TOOLCHAIN
-		default "/"  if NATIVE_TOOLCHAIN
-
-	config LIBUBACKTRACE_FILE_SPEC
-		string
-		prompt "uClibc backtrace library"
-		depends on EXTERNAL_TOOLCHAIN && PACKAGE_libubacktrace
-		default "./lib/libubacktrace{-*.so,.so.*}"
-
-	endmenu
-endef
-
 define Package/librt
 $(call Package/libc/Default)
   TITLE:=POSIX.1b RealTime extension library
@@ -609,14 +583,6 @@ endif
 		$(TOOLCHAIN_DIR)/lib/libthread_db-*.so  $(1)/opt/lib/
   endef
 
-  define Package/libubacktrace/install
-	$(INSTALL_DIR) $(1)/opt/lib
-	$(CP) \
-		$(TOOLCHAIN_DIR)/lib/libubacktrace.so.* $(1)/opt/lib
-	$(CP) \
-	$(TOOLCHAIN_DIR)/lib/libubacktrace-*.so  $(1)/opt/lib/
-  endef
-
   define Package/libpthread/install_lib
 	$(if $(wildcard $(TOOLCHAIN_DIR)/lib/libpthread_so.a),$(CP) $(TOOLCHAIN_DIR)/lib/libpthread_so.a $(1)/opt/lib/libpthread_pic.a)
   endef
@@ -725,11 +691,6 @@ else
 	$(CP) $(call qstrip,$(CONFIG_LIBPTHREAD_ROOT_DIR))/lib/libthread_db{-*.so,.so.*} $(1)/opt/lib/
   endef
 
-  define Package/libubacktrace/install
-	$(INSTALL_DIR) $(1)/opt/lib
-	$(CP) $(call qstrip,$(CONFIG_LIBUBACKTRACE_ROOT_DIR))/lib/libubacktrace{-*.so,.so.*} $(1)/opt/lib/
-  endef
-
   define Package/librt/install
 	for file in $(call qstrip,$(CONFIG_LIBRT_FILE_SPEC)); do \
 		dir=`dirname $$$$file` ; \
@@ -778,7 +739,6 @@ $(eval $(call BuildPackage,libssp))
 $(eval $(call BuildPackage,libstdcpp))
 $(eval $(call BuildPackage,libpthread))
 $(eval $(call BuildPackage,libthread-db))
-$(eval $(call BuildPackage,libubacktrace))
 $(eval $(call BuildPackage,librt))
 $(eval $(call BuildPackage,libgfortran))
 $(eval $(call BuildPackage,libgo))
