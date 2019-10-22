@@ -1,5 +1,5 @@
-# 
-# Copyright (C) 2006-2015 OpenWrt.org
+#
+# Copyright (C) 2016-2019 Entware
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=go-src
-PKG_VERSION:=1.11.2
+PKG_VERSION:=1.12.10
 
 PKG_SOURCE:=go$(PKG_VERSION).src.tar.gz
 PKG_SOURCE_URL:=https://dl.google.com/go
 HOST_BUILD_DIR:=$(STAGING_DIR_HOST)/go
-PKG_HASH:=042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550
+PKG_HASH:=f56e48fce80646d3c94dcf36d3e3f490f6d541a92070ad409b87b6bbb9da3954
 
 include $(INCLUDE_DIR)/host-build.mk
 
